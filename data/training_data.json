@@ -1,0 +1,67 @@
+{
+    "intents": [
+        {
+            "tag": "greeting",
+            "patterns": [
+                "hi", "hello", "hey", "good morning", "good evening", "what's up", "howdy", "hola", "yo",
+                "hello bot", "hi there", "greetings", "hey bot", "hi bot"
+            ],
+            "responses": ["Hello! How can I help with your trip today?", "Hi there! Ready to plan?", "Hey! Where are we going next?"]
+        },
+        {
+            "tag": "plan_trip",
+            "patterns": [
+                "plan a trip", "create an itinerary", "help me plan", "suggest a plan", "trip ideas", "what should we do", "build itinerary",
+                "i want to go somewhere", "plan my vacation", "make a schedule", "travel plan", "trip itinerary", "where to go"
+            ],
+            "responses": ["I can help with that! Try `/newtrip` to start, or ask me specific planning questions.", "Let's get planning! Where are you headed?", "Itineraries are my specialty. Tell me the destination and duration."]
+        },
+        {
+            "tag": "budget_help",
+            "patterns": [
+                "how much will it cost", "budget help", "track expenses", "split costs", "who owes who", "save money", "expensive", "cheap",
+                "finance", "money", "cost", "spending", "price", "wallet", "budget tracking"
+            ],
+            "responses": ["Use `/expense add` to track costs. I can also help you settle up later!", "Budgeting is key. Try setting a daily limit.", "Keep track of every penny with my `/expense` module."]
+        },
+        {
+            "tag": "packing_help",
+            "patterns": [
+                "what should i pack", "packing list", "forgot something", "essentials", "bring", "clothes", "luggage",
+                "pack for beach", "pack for mountains", "suitcase", "bag", "backpack", "wear"
+            ],
+            "responses": ["Don't forget the essentials! Use `/packing suggest` to get a started list.", "Packing depends on where you go. Beach or Mountains?", "Check your `/packing list` so you don't leave anything behind."]
+        },
+        {
+            "tag": "weather_check",
+            "patterns": [
+                "what is the weather", "is it raining", "sunny", "temperature", "forecast", "climate",
+                "will it rain", "weather report", "hot or cold", "degrees", "hows the weather"
+            ],
+            "responses": ["I can't check live weather yet, but I recommend checking a weather app before you pack!", "Always pack a raincoat just in case.", "Weather is unpredictable! Best to be prepared."]
+        },
+        {
+            "tag": "food_suggestion",
+            "patterns": [
+                "where to eat", "good food", "restaurant", "dinner", "lunch", "breakfast", "cafe", "hungry",
+                "dining", "meal", "food spots", "best restaurants", "places to eat"
+            ],
+            "responses": ["I love food! You can add restaurants to your plan with `/location add`.", "Check out local reviews. If you find a gem, save it!", "Exploring local cuisine is the best part of travel."]
+        },
+        {
+            "tag": "duration_query",
+            "patterns": [
+                "how long", "how many days", "trip duration", "length of stay", "how much time", "weekend trip", "week long"
+            ],
+            "responses": ["It depends on what you want to do! A weekend is great for a quick getaway, but a week lets you explore more.", "For international trips, I recommend at least 10 days.", "Plan your duration based on your budget and leave days!"]
+        },
+        {
+            "tag": "bot_identity",
+            "patterns": [
+                "who are you", "what are you", "are you ai", "real deal", "bot info",
+                "your name", "what do you do"
+            ],
+            "responses": ["I am the Real Deal, your personal trip planning assistant.", "I'm a bot designed to make group travel easy and fun!", "I'm your travel buddy!"]
+        }
+    ]
+}

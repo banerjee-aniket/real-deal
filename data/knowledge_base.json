@@ -1,0 +1,22 @@
+{
+    "packing_suggestions": {
+        "beach": ["Sunscreen", "Swimwear", "Towel", "Sunglasses", "Flip-flops", "Hat", "Beach Bag", "Aloe Vera"],
+        "trek": ["Hiking Boots", "Water Bottle", "Backpack", "Rain Jacket", "First Aid Kit", "Snacks", "Compass", "Bug Spray"],
+        "city": ["Comfortable Shoes", "Power Bank", "Umbrella", "Daypack", "Camera", "City Map", "Transit Card"],
+        "cold": ["Thermal Wear", "Heavy Jacket", "Gloves", "Beanie", "Woolen Socks", "Lip Balm", "Moisturizer"]
+    },
+    "budget_tips": [
+        "Track every expense immediately using `/expense add`.",
+        "Set a daily spending limit and stick to it.",
+        "Use local transport instead of taxis to save money.",
+        "Cook one meal a day if you have a kitchen.",
+        "Look for free walking tours in the city."
+    ],
+    "travel_hacks": [
+        "Roll your clothes to save space in your bag.",
+        "Scan your passport and email it to yourself.",
+        "Download offline maps before you leave Wi-Fi.",
+        "Bring a reusable water bottle to save money and plastic.",
+        "Always carry a power bank."
+    ]
+}

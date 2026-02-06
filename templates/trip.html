@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>{{ trip.name }}</h1>
+        <span class="badge bg-primary fs-5">{{ trip.date }}</span>
+    </div>
+    <a href="{{ url_for('delete_trip', trip_name=trip.name) }}" class="btn btn-danger" onclick="return confirm('Are you sure? This will delete all data. Discord channels will remain as orphans.')">
+        <i class="fas fa-trash"></i> Delete Trip
+    </a>
+</div>
+
+<ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab">Overview</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-packing-tab" data-bs-toggle="pill" data-bs-target="#pills-packing" type="button" role="tab">Packing List</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-budget-tab" data-bs-toggle="pill" data-bs-target="#pills-budget" type="button" role="tab">Budget</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="pills-tabContent">
+    
+    <!-- OVERVIEW TAB -->
+    <div class="tab-pane fade show active" id="pills-overview" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-white fw-bold"><i class="fas fa-map-marked-alt me-2"></i>Itinerary</div>
+                    <ul class="list-group list-group-flush">
+                        {% for item in itinerary %}
+                        <li class="list-group-item">
+                            <strong>{{ item.start_time[:10] }} {{ item.start_time[11:16] }}</strong>: {{ item.title }}
+                            {% if item.location %} <br><small class="text-muted">@ {{ item.location }}</small> {% endif %}
+                        </li>
+                        {% else %}
+                        <li class="list-group-item text-muted">No itinerary items yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-white fw-bold"><i class="fas fa-bell me-2"></i>Reminders</div>
+                    <ul class="list-group list-group-flush">
+                        {% for r in reminders %}
+                        <li class="list-group-item">
+                            {{ r.message }} <span class="badge bg-warning text-dark float-end">{{ r.remind_at[:10] }}</span>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item text-muted">No pending reminders.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PACKING TAB -->
+    <div class="tab-pane fade" id="pills-packing" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ url_for('add_packing_item', trip_name=trip.name) }}" method="POST" class="row g-3 mb-4">
+                    <div class="col-auto">
+                        <input type="text" class="form-control" name="item" placeholder="New Item (e.g. Toothbrush)" required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </form>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in packing %}
+                        <tr>
+                            <td>{{ item.item }}</td>
+                            <td>
+                                {% if item.claimed_by %}
+                                <span class="badge bg-success">Claimed by {{ item.claimed_by }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Unclaimed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('delete_packing_item', item_id=item.id) }}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUDGET TAB -->
+    <div class="tab-pane fade" id="pills-budget" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Spent</h5>
+                                <h2 class="text-primary">${{ "%.2f"|format(total_budget) }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('add_expense', trip_name=trip.name) }}" method="POST" class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" name="description" placeholder="Dinner, Taxi, etc." required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Amount ($)</label>
+                        <input type="number" step="0.01" class="form-control" name="amount" placeholder="0.00" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Payer</label>
+                        <input type="text" class="form-control" name="payer" placeholder="Name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100">Add Expense</button>
+                    </div>
+                </form>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Payer</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.date }}</td>
+                            <td>{{ expense.description }}</td>
+                            <td>{{ expense.payer }}</td>
+                            <td>${{ "%.2f"|format(expense.amount|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

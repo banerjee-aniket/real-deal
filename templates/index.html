@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-5">
+        <h1 class="display-4">Your Adventures</h1>
+        <p class="lead text-muted">Manage your trips, budgets, and packing lists.</p>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTripModal">
+            <i class="fas fa-plus"></i> Create New Trip
+        </button>
+    </div>
+</div>
+
+<!-- Create Trip Modal -->
+<div class="modal fade" id="createTripModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Plan a New Adventure</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('create_trip') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Trip Name</label>
+                        <input type="text" class="form-control" name="name" placeholder="Japan 2026" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Trip</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for trip in trips %}
+    <div class="col-md-4 mb-4">
+        <div class="card trip-card h-100">
+            <div class="card-body">
+                <h3 class="card-title">{{ trip.name }}</h3>
+                <p class="card-text text-muted"><i class="far fa-calendar-alt me-2"></i>{{ trip.date }}</p>
+                <a href="{{ url_for('trip_detail', trip_name=trip.name) }}" class="btn btn-primary stretched-link">Manage Trip</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <div class="alert alert-info">No trips found. Create one in Discord with <code>/newtrip</code>!</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
