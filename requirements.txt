@@ -4,3 +4,8 @@ supabase>=2.0.0
 attrs
 typing_extensions
 google-generativeai
+flask
+pytz
+deep_translator
+gunicorn
+aiohttp
