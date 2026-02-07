@@ -643,26 +643,6 @@ def logic_memory(action: str, trip_name: str, **kwargs):
 
 # --- REGISTRY ---
 
-COMMAND_REGISTRY = {
-    "weather": cmd_weather,
-    "translate": cmd_translate,
-    "worldclock": cmd_worldclock,
-    "currency": cmd_currency,
-    "settle": logic_expense_settle,
-    "summary": logic_trip_summary,
-    "packing_template": logic_packing_template,
-    "packing": logic_packing,
-    "itinerary": logic_itinerary,
-    "reminders": logic_reminders,
-    "expense": logic_expense,
-    "trip": logic_trip,
-    "poll": logic_poll,
-    "location": logic_location,
-    "memory": logic_memory,
-    "feedback": logic_feedback,
-    "decide": lambda **kwargs: logic_decide(kwargs.get('options', []))
-}
-
 def logic_feedback(action: str, **kwargs):
     """Manages feedback. Actions: submit"""
     if action == "submit":
@@ -684,6 +664,26 @@ def logic_decide(options: list):
         return {"status": "error", "message": "No options provided."}
     choice = random.choice(options)
     return {"status": "success", "data": choice, "message": f"I picked {choice}."}
+
+COMMAND_REGISTRY = {
+    "weather": cmd_weather,
+    "translate": cmd_translate,
+    "worldclock": cmd_worldclock,
+    "currency": cmd_currency,
+    "settle": logic_expense_settle,
+    "summary": logic_trip_summary,
+    "packing_template": logic_packing_template,
+    "packing": logic_packing,
+    "itinerary": logic_itinerary,
+    "reminders": logic_reminders,
+    "expense": logic_expense,
+    "trip": logic_trip,
+    "poll": logic_poll,
+    "location": logic_location,
+    "memory": logic_memory,
+    "feedback": logic_feedback,
+    "decide": lambda **kwargs: logic_decide(kwargs.get('options', []))
+}
 
 def get_command(name):
     return COMMAND_REGISTRY.get(name)
