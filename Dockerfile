@@ -6,6 +6,7 @@ WORKDIR /app
 # Install system dependencies (if any needed for scikit-learn/numpy)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

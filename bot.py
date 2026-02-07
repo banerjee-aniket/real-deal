@@ -16,6 +16,7 @@ import pytz
 from deep_translator import GoogleTranslator
 import google.generativeai as genai
 from local_brain import LocalBrain
+from voice_utils import YTDLSource
 
 # Load environment variables
 load_dotenv()
@@ -2165,6 +2166,52 @@ async def setup_error(interaction: discord.Interaction, error: app_commands.AppC
             await sender(f"❌ An error occurred: {error}", ephemeral=True)
     except Exception as e:
         print(f"Failed to handle error: {e}")
+
+# --- MUSIC COMMANDS ---
+
+@client.tree.command(name="join", description="Joins your voice channel.")
+async def join(interaction: discord.Interaction):
+    if not interaction.user.voice:
+        await interaction.response.send_message("❌ You are not connected to a voice channel.", ephemeral=True)
+        return
+    
+    channel = interaction.user.voice.channel
+    await interaction.response.defer(ephemeral=True)
+    
+    if interaction.guild.voice_client:
+        await interaction.guild.voice_client.move_to(channel)
+        await interaction.followup.send(f"➡️ Moved to **{channel.name}**.")
+    else:
+        await channel.connect()
+        await interaction.followup.send(f"✅ Joined **{channel.name}**.")
+
+@client.tree.command(name="play", description="Plays audio from a YouTube URL.")
+@app_commands.describe(query="URL or search query")
+async def play(interaction: discord.Interaction, query: str):
+    await interaction.response.defer()
+    
+    # Ensure bot is in a voice channel
+    if not interaction.guild.voice_client:
+        if interaction.user.voice:
+            await interaction.user.voice.channel.connect()
+        else:
+            await interaction.followup.send("❌ Join a voice channel first.")
+            return
+
+    try:
+        player = await YTDLSource.from_url(query, loop=client.loop, stream=True)
+        interaction.guild.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
+        await interaction.followup.send(f"🎶 Now playing: **{player.title}**")
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error playing audio: {e}")
+
+@client.tree.command(name="stop", description="Stops music and disconnects.")
+async def stop(interaction: discord.Interaction):
+    if interaction.guild.voice_client:
+        await interaction.guild.voice_client.disconnect()
+        await interaction.response.send_message("🛑 Disconnected.")
+    else:
+        await interaction.response.send_message("❌ I'm not connected.", ephemeral=True)
 
 if __name__ == "__main__":
     if not TOKEN or TOKEN == "your_token_here":
