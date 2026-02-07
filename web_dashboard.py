@@ -173,5 +173,5 @@ def api_add_expense(trip_name):
     return jsonify(core_logic.logic_expense("log", trip_name, **data))
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=True)
