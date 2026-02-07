@@ -2203,6 +2203,7 @@ async def play(interaction: discord.Interaction, query: str):
         interaction.guild.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
         await interaction.followup.send(f"🎶 Now playing: **{player.title}**")
     except Exception as e:
+        traceback.print_exc()
         await interaction.followup.send(f"❌ Error playing audio: {e}")
 
 @client.tree.command(name="stop", description="Stops music and disconnects.")
