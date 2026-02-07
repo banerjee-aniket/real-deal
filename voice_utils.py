@@ -35,10 +35,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
+        
+        # If not a URL, treat as search query
+        if not url.startswith(('http://', 'https://')):
+            url = f"ytsearch:{url}"
+
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
 
         if 'entries' in data:
-            # take first item from a playlist
+            # take first item from a playlist (or search results)
             data = data['entries'][0]
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)

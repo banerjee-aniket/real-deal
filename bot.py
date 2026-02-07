@@ -2185,8 +2185,8 @@ async def join(interaction: discord.Interaction):
         await channel.connect()
         await interaction.followup.send(f"✅ Joined **{channel.name}**.")
 
-@client.tree.command(name="play", description="Plays audio from a YouTube URL.")
-@app_commands.describe(query="URL or search query")
+@client.tree.command(name="play", description="Plays audio from a YouTube URL or song name.")
+@app_commands.describe(query="Song name or YouTube URL")
 async def play(interaction: discord.Interaction, query: str):
     await interaction.response.defer()
     
@@ -2221,3 +2221,5 @@ if __name__ == "__main__":
             client.run(TOKEN)
         except Exception as e:
             print(f"❌ Error running bot: {e}")
+ALTER TABLE reminders ADD COLUMN IF NOT EXISTS user_id TEXT;
+ALTER TABLE reminders ADD COLUMN IF NOT EXISTS channel_id TEXT;
