@@ -12,3 +12,7 @@ alter table public.feedback enable row level security;
 -- Allow insert for anyone (if using anon key) or just authenticated (if using service role in bot)
 -- Since the bot uses the service role key (usually), it bypasses RLS, but good practice to define policies.
 -- For now, we'll just create the table.
+
+-- Update Reminders Table to include user_id and channel_id
+ALTER TABLE reminders ADD COLUMN IF NOT EXISTS user_id TEXT;
+ALTER TABLE reminders ADD COLUMN IF NOT EXISTS channel_id TEXT;

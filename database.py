@@ -204,10 +204,17 @@ def get_upcoming_itinerary(trip_name, limit=3):
         return []
 
 # --- REMINDERS ---
-def add_reminder(trip_name, message, remind_at):
+def add_reminder(trip_name, user_id, channel_id, message, remind_at):
     if not supabase: return
     try:
-        data = {"trip_name": trip_name, "message": message, "remind_at": remind_at, "completed": False}
+        data = {
+            "trip_name": trip_name, 
+            "user_id": str(user_id) if user_id else None, 
+            "channel_id": str(channel_id) if channel_id else None, 
+            "message": message, 
+            "remind_at": remind_at, 
+            "completed": False
+        }
         supabase.table("reminders").insert(data).execute()
     except Exception as e:
         print(f"Error adding reminder: {e}")
@@ -220,6 +227,23 @@ def get_reminders(trip_name):
     except Exception as e:
         print(f"Error getting reminders: {e}")
         return []
+
+def get_due_reminders():
+    if not supabase: return []
+    try:
+        now = datetime.datetime.now().isoformat()
+        response = supabase.table("reminders").select("*").lte("remind_at", now).eq("completed", False).execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting due reminders: {e}")
+        return []
+
+def delete_reminder(reminder_id):
+    if not supabase: return
+    try:
+        supabase.table("reminders").delete().eq("id", reminder_id).execute()
+    except Exception as e:
+        print(f"Error deleting reminder: {e}")
 
 def mark_reminder_completed(reminder_id):
     if not supabase: return
