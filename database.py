@@ -197,29 +197,17 @@ def delete_itinerary_item(item_id):
 def get_upcoming_itinerary(trip_name, limit=3):
     if not supabase: return []
     try:
-        now = datetime.datetime.now().isoformat()
-        response = supabase.table("itinerary").select("*")\
-            .eq("trip_name", trip_name)\
-            .gte("start_time", now)\
-            .order("start_time")\
-            .limit(limit)\
-            .execute()
+        response = supabase.table("itinerary").select("*").eq("trip_name", trip_name).gte("start_time", datetime.datetime.now().isoformat()).order("start_time").limit(limit).execute()
         return response.data
     except Exception as e:
         print(f"Error getting upcoming itinerary: {e}")
         return []
 
 # --- REMINDERS ---
-def add_reminder(trip_name, user_id, channel_id, message, remind_at):
+def add_reminder(trip_name, message, remind_at):
     if not supabase: return
     try:
-        data = {
-            "trip_name": trip_name,
-            "user_id": str(user_id),
-            "channel_id": str(channel_id),
-            "message": message,
-            "remind_at": remind_at.isoformat()
-        }
+        data = {"trip_name": trip_name, "message": message, "remind_at": remind_at, "completed": False}
         supabase.table("reminders").insert(data).execute()
     except Exception as e:
         print(f"Error adding reminder: {e}")
@@ -227,225 +215,35 @@ def add_reminder(trip_name, user_id, channel_id, message, remind_at):
 def get_reminders(trip_name):
     if not supabase: return []
     try:
-        response = supabase.table("reminders").select("*").eq("trip_name", trip_name).order("remind_at").execute()
+        response = supabase.table("reminders").select("*").eq("trip_name", trip_name).eq("completed", False).execute()
         return response.data
     except Exception as e:
         print(f"Error getting reminders: {e}")
         return []
 
-def delete_reminder(reminder_id):
+def mark_reminder_completed(reminder_id):
     if not supabase: return
     try:
-        supabase.table("reminders").delete().eq("id", reminder_id).execute()
+        supabase.table("reminders").update({"completed": True}).eq("id", reminder_id).execute()
     except Exception as e:
-        print(f"Error deleting reminder: {e}")
+        print(f"Error marking reminder completed: {e}")
 
-def get_due_reminders():
-    if not supabase: return []
+# --- FEEDBACK ---
+def submit_feedback(user_name, message):
+    if not supabase: return
     try:
-        now_str = datetime.datetime.now().isoformat()
-        response = supabase.table("reminders").select("*").lte("remind_at", now_str).execute()
-        return response.data
+        data = {
+            "user_name": user_name,
+            "message": message,
+            "created_at": datetime.datetime.now().isoformat()
+        }
+        supabase.table("feedback").insert(data).execute()
+        return True
     except Exception as e:
-        print(f"Error getting due reminders: {e}")
-        return []
+        print(f"Error submitting feedback: {e}")
+        return False
 
 # --- MODULES ---
 def get_module_status(guild_id, module_name):
-    if not supabase: return True # Default to enabled if DB fails or row missing (we will upsert on toggle)
-    try:
-        response = supabase.table("server_modules").select("is_enabled")\
-            .eq("guild_id", str(guild_id))\
-            .eq("module_name", module_name)\
-            .execute()
-        if response.data:
-            return response.data[0]['is_enabled']
-        return True # Default enabled
-    except Exception as e:
-        print(f"Error getting module status: {e}")
-        return True
-
-def toggle_module(guild_id, module_name, is_enabled):
-    if not supabase: return
-    try:
-        data = {
-            "guild_id": str(guild_id),
-            "module_name": module_name,
-            "is_enabled": is_enabled
-        }
-        supabase.table("server_modules").upsert(data).execute()
-    except Exception as e:
-        print(f"Error toggling module: {e}")
-
-
-# --- POLLS ---
-def create_poll(trip_name, question, options, creator_id, expires_at=None):
-    if not supabase: return None
-    try:
-        data = {
-            "trip_name": trip_name,
-            "question": question,
-            "options": options,
-            "creator_id": str(creator_id),
-            "is_active": True
-        }
-        if expires_at:
-            data["expires_at"] = expires_at.isoformat()
-        response = supabase.table("polls").insert(data).execute()
-        return response.data[0] if response.data else None
-    except Exception as e:
-        print(f"Error creating poll: {e}")
-        return None
-
-def update_poll_message(poll_id, channel_id, message_id):
-    if not supabase: return
-    try:
-        supabase.table("polls").update({
-            "channel_id": str(channel_id),
-            "message_id": str(message_id)
-        }).eq("id", poll_id).execute()
-    except Exception as e:
-        print(f"Error updating poll message: {e}")
-
-def vote_poll(poll_id, user_id, option_index, weight=1):
-    if not supabase: return False
-    try:
-        data = {
-            "poll_id": poll_id,
-            "user_id": str(user_id),
-            "option_index": option_index,
-            "weight": weight
-        }
-        supabase.table("poll_votes").upsert(data, on_conflict="poll_id,user_id").execute()
-        return True
-    except Exception as e:
-        print(f"Error voting: {e}")
-        return False
-
-def get_poll_results(poll_id):
-    if not supabase: return {}
-    try:
-        votes = supabase.table("poll_votes").select("*").eq("poll_id", poll_id).execute()
-        poll = supabase.table("polls").select("options").eq("id", poll_id).single().execute()
-        if not poll.data: return {}
-        options = poll.data['options']
-        
-        results = {i: 0 for i in range(len(options))}
-        total_votes = 0
-        
-        for v in votes.data:
-            idx = v['option_index']
-            w = v.get('weight', 1)
-            if idx in results:
-                results[idx] += w
-                total_votes += w
-                
-        return {"results": results, "total": total_votes, "options": options}
-    except Exception as e:
-        print(f"Error getting poll results: {e}")
-        return {}
-
-def get_active_polls(trip_name):
-    if not supabase: return []
-    try:
-        response = supabase.table("polls").select("*").eq("trip_name", trip_name).eq("is_active", True).execute()
-        return response.data
-    except Exception as e:
-        print(f"Error getting active polls: {e}")
-        return []
-
-# --- LOCATIONS ---
-def add_location(trip_name, name, address, url, loc_type, added_by):
-    if not supabase: return None
-    try:
-        data = {
-            "trip_name": trip_name,
-            "name": name,
-            "address": address,
-            "url": url,
-            "type": loc_type,
-            "added_by": added_by
-        }
-        response = supabase.table("locations").insert(data).execute()
-        return response.data[0] if response.data else None
-    except Exception as e:
-        print(f"Error adding location: {e}")
-        return None
-
-def get_locations(trip_name):
-    if not supabase: return []
-    try:
-        response = supabase.table("locations").select("*").eq("trip_name", trip_name).order("type").execute()
-        return response.data
-    except Exception as e:
-        print(f"Error getting locations: {e}")
-        return []
-
-def delete_location(location_id):
-    if not supabase: return
-    try:
-        supabase.table("locations").delete().eq("id", location_id).execute()
-    except Exception as e:
-        print(f"Error deleting location: {e}")
-
-def check_in_user(trip_name, user_id, user_name, location_id):
-    if not supabase: return
-    try:
-        data = {
-            "trip_name": trip_name,
-            "user_id": str(user_id),
-            "user_name": user_name,
-            "location_id": location_id,
-            "timestamp": datetime.datetime.now().isoformat()
-        }
-        supabase.table("checkins").insert(data).execute()
-    except Exception as e:
-        print(f"Error checking in: {e}")
-
-def get_latest_checkins(trip_name):
-    if not supabase: return []
-    try:
-        response = supabase.table("checkins").select("*, locations(name, type)")\
-            .eq("trip_name", trip_name)\
-            .order("timestamp", desc=True)\
-            .limit(50)\
-            .execute()
-            
-        checkins = response.data
-        latest = {}
-        for c in checkins:
-            uid = c['user_id']
-            if uid not in latest:
-                latest[uid] = c
-        return list(latest.values())
-    except Exception as e:
-        print(f"Error getting checkins: {e}")
-        return []
-
-# --- MEMORIES ---
-def add_memory(trip_name, url, caption, user_id, day_number=None):
-    if not supabase: return
-    try:
-        data = {
-            "trip_name": trip_name,
-            "url": url,
-            "caption": caption,
-            "user_id": str(user_id),
-            "day_number": day_number
-        }
-        supabase.table("memories").insert(data).execute()
-    except Exception as e:
-        print(f"Error adding memory: {e}")
-
-def get_memories(trip_name, day_filter=None):
-    if not supabase: return []
-    try:
-        query = supabase.table("memories").select("*").eq("trip_name", trip_name)
-        if day_filter is not None:
-            query = query.eq("day_number", day_filter)
-        
-        response = query.order("created_at", desc=True).execute()
-        return response.data
-    except Exception as e:
-        print(f"Error getting memories: {e}")
-        return []
+    # For now, default to True as we haven't implemented a module table
+    return True

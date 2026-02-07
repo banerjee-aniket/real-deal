@@ -10,3 +10,4 @@ deep_translator
 gunicorn
 aiohttp
 scikit-learn
+PyNaCl

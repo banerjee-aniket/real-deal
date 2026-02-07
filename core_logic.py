@@ -659,8 +659,23 @@ COMMAND_REGISTRY = {
     "poll": logic_poll,
     "location": logic_location,
     "memory": logic_memory,
+    "feedback": logic_feedback,
     "decide": lambda **kwargs: logic_decide(kwargs.get('options', []))
 }
+
+def logic_feedback(action: str, **kwargs):
+    """Manages feedback. Actions: submit"""
+    if action == "submit":
+        user = kwargs.get("user")
+        message = kwargs.get("message")
+        if not message:
+             return {"status": "error", "message": "Message required."}
+        
+        success = db.submit_feedback(user, message)
+        if success:
+            return {"status": "success", "message": "Feedback submitted. Thank you!"}
+        return {"status": "error", "message": "Failed to submit feedback."}
+    return {"status": "error", "message": "Invalid action."}
 
 def logic_decide(options: list):
     """Randomly picks an option."""

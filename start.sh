@@ -6,11 +6,21 @@ python bot.py &
 echo "DEBUG: Raw PORT environment variable is: '$PORT'"
 
 # Determine the port to use
-# 1. If PORT is unset or empty, default to 8080.
-# 2. If PORT is set but contains non-numeric characters (like literal strings), default to 8080.
-if [[ -z "$PORT" ]]; then
+# 1. Check if PORT is literally set to '${WEB_PORT}' (Zeabur injection issue)
+if [[ "$PORT" == '${WEB_PORT}' ]] || [[ "$PORT" == "\${WEB_PORT}" ]]; then
+    echo "DEBUG: PORT is set to literal '\${WEB_PORT}'. Checking WEB_PORT env var..."
+    if [[ -n "$WEB_PORT" ]]; then
+        echo "DEBUG: Found WEB_PORT=$WEB_PORT. Using it."
+        PORT_TO_USE="$WEB_PORT"
+    else
+        echo "DEBUG: WEB_PORT is unset. Defaulting to 8080."
+        PORT_TO_USE=8080
+    fi
+# 2. If PORT is unset or empty, default to 8080.
+elif [[ -z "$PORT" ]]; then
     echo "DEBUG: PORT is empty. Defaulting to 8080."
     PORT_TO_USE=8080
+# 3. If PORT is set but contains non-numeric characters, default to 8080.
 elif ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
     echo "DEBUG: PORT '$PORT' is not a valid number. Defaulting to 8080."
     PORT_TO_USE=8080

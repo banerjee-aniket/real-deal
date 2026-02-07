@@ -16,6 +16,9 @@
         <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill" data-bs-target="#pills-overview" type="button" role="tab">Overview</button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-calendar-tab" data-bs-toggle="pill" data-bs-target="#pills-calendar" type="button" role="tab">Calendar</button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="pills-packing-tab" data-bs-toggle="pill" data-bs-target="#pills-packing" type="button" role="tab">Packing List</button>
     </li>
     <li class="nav-item" role="presentation">
@@ -56,6 +59,15 @@
                         {% endfor %}
                     </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALENDAR TAB -->
+    <div class="tab-pane fade" id="pills-calendar" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <div id="calendar"></div>
             </div>
         </div>
     </div>
@@ -115,6 +127,9 @@
                                 <h2 class="text-primary">${{ "%.2f"|format(total_budget) }}</h2>
                             </div>
                         </div>
+                        <div class="mt-4">
+                             <canvas id="expenseChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -160,4 +175,87 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- DATA PREPARATION ---
+        const itineraryData = JSON.parse('{{ itinerary | tojson | safe }}');
+        const expenseData = JSON.parse('{{ expenses | tojson | safe }}');
+
+        // --- CALENDAR ---
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: itineraryData.map(item => ({
+                title: item.title,
+                start: item.start_time,
+                description: item.location || ''
+            })),
+            eventClick: function(info) {
+                alert('Event: ' + info.event.title + '\nLocation: ' + info.event.extendedProps.description);
+            }
+        });
+        
+        // Render calendar when tab is shown to fix sizing issues
+        var calendarTab = document.getElementById('pills-calendar-tab');
+        calendarTab.addEventListener('shown.bs.tab', function (e) {
+            calendar.render();
+        });
+
+        // --- EXPENSE CHART ---
+        // Group expenses by payer
+        const payerTotals = {};
+        expenseData.forEach(exp => {
+            const payer = exp.payer || 'Unknown';
+            const amount = parseFloat(exp.amount);
+            if (payerTotals[payer]) {
+                payerTotals[payer] += amount;
+            } else {
+                payerTotals[payer] = amount;
+            }
+        });
+
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(payerTotals),
+                datasets: [{
+                    label: 'Expenses by Payer',
+                    data: Object.values(payerTotals),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Expenses by Payer'
+                    }
+                }
+            }
+        });
+    });
+</script>
+
 {% endblock %}

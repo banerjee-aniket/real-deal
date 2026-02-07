@@ -14,6 +14,7 @@ import urllib.parse
 import aiohttp
 import pytz
 from deep_translator import GoogleTranslator
+import google.generativeai as genai
 from local_brain import LocalBrain
 
 # Load environment variables
@@ -139,6 +140,7 @@ class SetupBot(discord.Client):
         intents.message_content = True # Needed for /clear check if reading content, though usually not for just delete
         super().__init__(intents=intents)
         self.tree = app_commands.CommandTree(self)
+        self.last_daily_summary_date = None
 
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
@@ -257,8 +259,11 @@ class SetupBot(discord.Client):
     @tasks.loop(minutes=1)
     async def daily_itinerary_task(self):
         now = datetime.now()
-        # Pin at 8:00 AM
-        if now.hour == 8 and now.minute == 0:
+        today_str = now.strftime("%Y-%m-%d")
+        
+        # Pin at 8:00 AM, and only once per day
+        if now.hour == 8 and now.minute == 0 and self.last_daily_summary_date != today_str:
+            self.last_daily_summary_date = today_str
             trips = await self.loop.run_in_executor(None, db.get_all_trips)
             for trip in trips:
                 if not trip.get('channel_id'): continue
@@ -699,6 +704,10 @@ class SelfRoleView(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(SelfRoleSelect())
 
+@client.tree.command(name="selfrole", description="Manage your own roles (Traveler, Explorer, etc).")
+async def selfrole(interaction: discord.Interaction):
+    await interaction.response.send_message("🎭 **Choose your roles:**", view=SelfRoleView(), ephemeral=True)
+
 @client.tree.command(name="trip", description="Manage trips (create, list, archive, etc).")
 @app_commands.describe(action="create/list/set-active/archive", name="Trip Name (for create/set/archive)", date="Start Date (YYYY-MM-DD)")
 @app_commands.choices(action=[
@@ -803,6 +812,19 @@ async def translate(interaction: discord.Interaction, text: str, target_lang: st
         await interaction.followup.send(embed=embed)
     else:
         await interaction.followup.send(f"❌ Translation failed: {result['message']}")
+
+
+@client.tree.command(name="feedback", description="Submit feedback or bug reports to the developers.")
+@app_commands.describe(message="Your feedback message")
+async def feedback(interaction: discord.Interaction, message: str):
+    await interaction.response.defer(ephemeral=True)
+    # logic_feedback expects 'user' (name) and 'message'
+    result = core_logic.logic_feedback("submit", user=interaction.user.name, message=message)
+    
+    if result["status"] == "success":
+        await interaction.followup.send(f"✅ {result['message']}", ephemeral=True)
+    else:
+        await interaction.followup.send(f"❌ {result['message']}", ephemeral=True)
 
 @client.tree.command(name="worldclock", description="Check time in different timezones.")
 @app_commands.describe(timezone="Timezone name (e.g., 'Europe/Paris', 'Asia/Tokyo', 'US/Eastern')")
@@ -1908,8 +1930,6 @@ async def memory(interaction: discord.Interaction, action: app_commands.Choice[s
         
         file = discord.File(fp=io.BytesIO(html.encode()), filename=f"{trip_name}_memories.html")
         await interaction.response.send_message(f"📦 **Memory Archive for {trip_name}** (Download to view)", file=file)
-
-import google.generativeai as genai
 
 @client.tree.command(name="ask", description="Ask the AI Assistant for trip advice.")
 @app_commands.describe(question="What do you want to know?")
