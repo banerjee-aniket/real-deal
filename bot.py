@@ -2222,5 +2222,3 @@ if __name__ == "__main__":
             client.run(TOKEN)
         except Exception as e:
             print(f"❌ Error running bot: {e}")
-ALTER TABLE reminders ADD COLUMN IF NOT EXISTS user_id TEXT;
-ALTER TABLE reminders ADD COLUMN IF NOT EXISTS channel_id TEXT;
